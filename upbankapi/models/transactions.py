@@ -146,6 +146,10 @@ class Transaction(ModelBase):
     `hold_info` field for the original amount the transaction was `HELD` at.
     """
 
+    total_amount: float
+    """The total amount of this transaction in Australian dollars, including
+    any Round Up."""
+
     amount_in_base_units: int
     """The amount of money in the smallest denomination for the currency."""
 
@@ -186,15 +190,18 @@ class Transaction(ModelBase):
         if attrs["holdInfo"]:
             self.hold_info = HoldInfo(attrs["holdInfo"])
 
-        if attrs["roundUp"]:
-            self.round_up = RoundUp(attrs["roundUp"])
-
-        if attrs["cashback"]:
-            self.cashback = Cashback(attrs["cashback"])
-
         self.amount = float(attrs["amount"]["value"])
         self.amount_in_base_units = attrs["amount"]["valueInBaseUnits"]
         self.currency = attrs["amount"]["currencyCode"]
+
+        if attrs["roundUp"]:
+            self.round_up = RoundUp(attrs["roundUp"])
+            self.total_amount = self.amount + self.round_up.amount.value
+        else:
+            self.total_amount = self.amount
+
+        if attrs["cashback"]:
+            self.cashback = Cashback(attrs["cashback"])
 
         if attrs["foreignAmount"]:
             self.foreign_amount = MoneyObject(attrs["foreignAmount"])
