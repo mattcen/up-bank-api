@@ -9,6 +9,9 @@ from .categories import (
     AsyncTag,
     AsyncPartialCategoryParent,
 )
+# FIXME: This results in a circular dependency in import because accouts
+# already imports *this* file
+#from .accounts import Account
 from .common import ModelBase, MoneyObject
 
 
@@ -177,6 +180,10 @@ class Transaction(ModelBase):
     category: Optional[PartialCategoryParent] = None
     """The category assigned to this transaction."""
 
+    # FIXME: Can't list this type without importing it
+    #account: Account = None
+    #"""The account for to this transaction."""
+
     tags: List[Tag]
     """The list of tags assigned to this transaction."""
 
@@ -221,6 +228,14 @@ class Transaction(ModelBase):
                     "relationships": {"parent": relations["parentCategory"]},
                 },
             )
+
+        if relations["account"]["data"]:
+            # FIXME: I suspect this is the *wrong* way to do this; I'm not
+            # super clear on the mechanics, but I think this probably does an
+            # API call for every transaction to find its account info from the
+            # ID, which is a very bad plan. Not sure how else to do it using
+            # the existing machinery.
+            self.account = self._client.account(relations["account"]["data"]["id"])
 
         self.tags = [Tag(self._client, x) for x in relations["tags"]["data"]]
 
