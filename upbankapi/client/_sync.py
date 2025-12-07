@@ -58,7 +58,7 @@ class Client(ClientBase):
             data = {}
         else:
             data = response.json()
-        return self._handle_response(data, response.status_code, dict(response.headers))
+        return self._handle_response(data, response.status_code, response.headers)
 
     def ping(self) -> str:
         """Retrieves the users unique id and checks if the token is valid.
